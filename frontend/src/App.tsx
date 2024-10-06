@@ -1,0 +1,400 @@
+import React, { useEffect, useState } from "react";
+import { Table, Form, TableColumnsType, Modal, Tabs, Upload, message, UploadProps, Button } from "antd";
+import { InboxOutlined } from '@ant-design/icons';
+import axios from "axios";
+import Input from "antd/lib/input";
+import * as Papa from "papaparse";
+
+const { Dragger } = Upload;
+
+type Order = {
+  id: string;
+  product_type: string;
+  product_name: string;
+  sale_price: number;
+  buyer_name: string;
+  income: number;
+  receiver_name: string;
+  sale_date: Date;
+}
+
+const props: UploadProps = {
+  name: 'file',
+  multiple: true,
+  action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+  // action: 'http://localhost:5001/api/upload',
+  onChange(info) {
+    const { status } = info.file;
+    if (status !== 'uploading') {
+      console.log(info.file, info.fileList);
+    }
+    if (status === 'done') {
+      message.success(`${info.file.name} file uploaded successfully.`);
+    } else if (status === 'error') {
+      message.error(`${info.file.name} file upload failed.`);
+    }
+  },
+  onDrop(e) {
+    console.log('Dropped files', e.dataTransfer.files);
+  },
+};
+
+const App: React.FC = () => {
+  const [orders, setDataSource] = useState<Order[]>([]);
+  const [form] = Form.useForm();
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [data, setData] = useState<any[]>([]);
+
+  useEffect(() => {
+    axios.post('http://localhost:5001/api/findAll')
+      .then(response => {
+        setDataSource(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  const addNewOrder = () => {
+    const newOrder: Order = {
+      id: "0",
+      product_type: "Am",
+      product_name: "菊石",
+      sale_price: 0,
+      buyer_name: "",
+      income: 0,
+      receiver_name: "史庭鈞",
+      sale_date: new Date(),
+    };
+    setDataSource([newOrder, ...orders]);
+    setEditingKey(newOrder.id);
+    form.setFieldsValue(newOrder);
+  };
+
+  const handleSaveButtonBlocked = () => {
+    const currentValues = form.getFieldsValue();
+    const allFieldsFilled = Object.values(currentValues).every(value => value !== '');
+    setIsButtonEnabled(allFieldsFilled);
+  };
+
+  const save = async (id: string) => {
+    try {
+      const row = await form.validateFields();
+      const newData = [...orders];
+      const index = newData.findIndex((item) => id === item.id);
+      if (index > -1) {
+        const item = newData[index];
+        const updatedItem = { ...item, ...row };
+        newData.splice(index, 1, updatedItem);
+        setDataSource(newData);
+        setEditingKey(null);
+        if (id === "0") {
+          
+          await axios.post('http://localhost:5001/api/add', updatedItem);
+        } else {
+          
+          await axios.post('http://localhost:5001/api/update', updatedItem);
+        }
+      }
+    } catch (errInfo) {
+      console.log('Validate Failed:', errInfo);
+    }
+  };
+
+  const showDeleteConfirm = (id: string) => {
+    setDeleteId(id);
+    deleteOrder();
+    setIsModalVisible(true);
+  };
+
+  const deleteOrder = async() => {
+    if (deleteId) {
+      await axios.post('http://localhost:5001/api/delete', { id: deleteId });
+      setDataSource(orders.filter(order => order.id !== deleteId));
+    }
+    setIsModalVisible(false);
+    
+  };
+
+  const modalCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const editCancel = () => {
+    setEditingKey(null);
+  };
+
+  const columns: TableColumnsType<Order> = [
+    {
+      title: '類型',
+      dataIndex: 'product_type',
+      key: 'product_type',
+      sorter: (a: Order, b: Order) => a.product_type.localeCompare(b.product_type),
+      filters: Array.from(new Set(orders.map(item => item.product_type))).map(type => ({
+        text: type,
+        value: type,
+      })),
+      onFilter: (value: string, record: Order) => record.product_type.includes(value as string),
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="product_type"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '名稱',
+      dataIndex: 'product_name',
+      key: 'product_name',
+      sorter: (a: Order, b: Order) => a.product_name.localeCompare(b.product_name),
+      filters: Array.from(new Set(orders.map(item => item.product_name))).map(name => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value: string, record: Order) => record.product_name.includes(value as string),
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="product_name"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '成交價',
+      dataIndex: 'sale_price',
+      key: 'sale_price',
+      sorter: (a: Order, b: Order) => a.sale_price - b.sale_price,
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="sale_price"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '買家名稱',
+      dataIndex: 'buyer_name',
+      key: 'buyer_name',
+      sorter: (a: Order, b: Order) => a.buyer_name.localeCompare(b.buyer_name),
+      filters: Array.from(new Set(orders.map(item => item.buyer_name))).map(name => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value: string, record: Order) => record.buyer_name.includes(value as string),
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="buyer_name"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '實收金額',
+      dataIndex: 'income',
+      key: 'income',
+      sorter: (a: Order, b: Order) => a.income - b.income,
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="income"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '收款人',
+      dataIndex: 'receiver_name',
+      key: 'receiver_name',
+      sorter: (a: Order, b: Order) => a.receiver_name.localeCompare(b.receiver_name),
+      filters: Array.from(new Set(orders.map(item => item.receiver_name))).map(name => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value: string, record: Order) => record.receiver_name.includes(value as string),
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="receiver_name"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '賣出日期',
+      dataIndex: 'sale_date',
+      key: 'sale_date',
+      sorter: (a: Order, b: Order) => new Date(a.sale_date).getTime() - new Date(b.sale_date).getTime(),
+      render: (text: string, record: Order) => {
+        return isEditing(record) ? (
+          <Form.Item
+            name="sale_date"
+            style={{ margin: 0 }}
+          >
+            <Input />
+          </Form.Item>
+        ) : (
+          text
+        );
+      }
+    },
+    {
+      title: '操作',
+      render: (_: any, record: Order) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <span>
+            <button onClick={() => save(record.id)} disabled={!isButtonEnabled}>保存</button>
+            <button onClick={editCancel}>取消</button>
+          </span>
+        ) : (
+          <span>
+            <button onClick={() => edit(record)}>編輯</button>
+            <button onClick={() => showDeleteConfirm(record.id)}>刪除</button>
+          </span>
+        );
+      }
+    }
+  ] as TableColumnsType<Order>;
+
+  const isEditing = (record: Order) => record.id === editingKey;
+
+  const edit = (record: Order) => {
+    form.setFieldsValue({ ...record });
+    setEditingKey(record.id);
+  };
+
+  const handleFileChange = (file: File) => {
+    setFile(file);
+    Papa.parse(file, {
+      complete: (results) => {
+        setData(results.data);
+        message.success(`${file.name} file parsed successfully.`);
+      },
+      header: true,
+    });
+    return false; // Prevent automatic upload
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      message.error("No file selected for upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post("http://your-api-endpoint/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      message.success("File uploaded successfully.");
+    } catch (error) {
+      message.error("File upload failed.");
+    }
+  };
+
+  return (
+    <div className="App">
+      
+      <Tabs defaultActiveKey="1">
+        <Tabs.TabPane tab="訂單" key="1">
+          <button onClick={addNewOrder}>新增訂單</button>
+          <Form form={form} component={false} onFieldsChange={handleSaveButtonBlocked}>
+            <Table 
+              columns={columns}
+              dataSource={orders} 
+              rowKey="id"
+              pagination={{ pageSize: 10 }}
+            />
+          </Form>
+          <Modal
+            title="刪除訂單"
+            open={isModalVisible}
+            onOk={deleteOrder}
+            onCancel={modalCancel}
+            okText="確認"
+            cancelText="取消"
+          >
+            <p>確定要刪除這筆訂單嗎？</p>
+          </Modal>
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="統計" key="2">
+          <h1>統計</h1>
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="CSV上傳訂單" key="3">
+          <a href="/template.csv" download>
+            <button>下載CSV模板</button>
+          </a>
+          <Dragger
+            name="file"
+            multiple={false}
+            beforeUpload={handleFileChange}
+            showUploadList={false}
+            accept=".csv"
+          >
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined />
+            </p>
+            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+            <p className="ant-upload-hint">Support for a single upload. Only CSV files are allowed.</p>
+          </Dragger>
+          <Button type="primary" onClick={handleUpload} disabled={!file}>
+            確認上傳
+          </Button>
+          {data.length > 0 && (
+            <div>
+              <h3>資料預覽</h3>
+              <pre>{JSON.stringify(data.slice(0, 5), null, 2)}</pre> {/* Preview first 5 rows */}
+            </div>
+          )}
+        </Tabs.TabPane>
+      </Tabs>
+      
+    </div>
+  );
+};
+
+export default App;

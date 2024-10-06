@@ -1,0 +1,28 @@
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Coverage reports
+coverage/
+
+# Cache
+*.cache
+
+# Database files
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+
+# Process ID files
+*.pid
