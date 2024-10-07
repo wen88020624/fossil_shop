@@ -10,4 +10,13 @@ export const AppDataSource = new DataSource({
   database: "postgres",  // 你要使用的資料庫名稱
   entities: [Order],  // 會在這裡存放實體類別
   synchronize: false,   // 開啟時會自動同步資料庫，要設定成 false，千萬不可定為 true，否則可能一不小心就會把本地暫時修改的 table schema 同步到遠端的資料庫上造成資料遺失
+  logging: false,
 });
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!")
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization", err)
+    })

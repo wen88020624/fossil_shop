@@ -32,5 +32,5 @@ export default {
     add,
     remove,
     update,
-    findAll,
+    findAll
 };
