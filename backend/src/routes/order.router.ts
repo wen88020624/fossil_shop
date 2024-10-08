@@ -18,7 +18,7 @@ router.route('/update')
 router.route('/findAll')
     .post(orderController.findAll);
 
-router.route('/uploadCSV')
-    .post(uploadController.uploadOrder);
+router.route('/uploadOrders')
+    .post(uploadController.uploadOrders);
 
 export default router;

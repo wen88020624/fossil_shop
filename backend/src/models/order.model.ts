@@ -1,4 +1,3 @@
-import { todo } from 'node:test';
 import { Order } from '../entities/order';
 
 async function add(orderData: { id: string, product_type: string, product_name: string, sale_price: number, buyer_name: string, income: number, receiver_name: string, sale_date: Date }) {
@@ -28,9 +27,15 @@ async function findAll() {
     return Order.find();
 }
 
+async function saveAllOrders(orders: Order[]) {
+    console.log(orders);
+    return Order.save(orders);
+}
+
 export default {
     add,
     remove,
     update,
-    findAll
+    findAll,
+    saveAllOrders
 };

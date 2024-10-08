@@ -1,15 +1,9 @@
-import orderModel from "../models/order.model";
+import { Order } from '../entities/order';
+import orderModel from '../models/order.model';
 
-
-
-async function saveAllOrders() {
-    const orders = await orderModel.findAll();
-    return orders.map(order => ({
-        ...order,
-        sale_price: Math.round(order.sale_price),
-        income: Math.round(order.income),
-        sale_date: order.sale_date.toISOString().split('T')[0]
-    }));
+async function saveAllOrders(orders: Order[]) {
+    const savedOrders = await orderModel.saveAllOrders(orders);
+    return savedOrders;
 }
 
 export default {
