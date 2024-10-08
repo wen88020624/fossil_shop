@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, forwardRef, useImperativeHandle, useState } from "react";
 import { Table, Form, Modal, TableColumnsType } from "antd";
 import axios from "axios";
 import Input from "antd/lib/input";
@@ -14,15 +14,27 @@ type Order = {
   sale_date: Date;
 };
 
-const OrderTab: React.FC = () => {
+interface OrderTabRef {
+  refreshTable: () => void;
+}
+
+const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
   const [orders, setDataSource] = useState<Order[]>([]);
   const [form] = Form.useForm();
-  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState< string | null>(null);
   const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
+  // 取得訂單
+  useEffect(() => { getOrders() }, []);
+
+  // 刷新訂單
+  useImperativeHandle(ref, () => ({
+    refreshTable: getOrders
+  }));
+
+  const getOrders = () => {
     axios.post('http://localhost:5001/api/findAll')
       .then(response => {
         setDataSource(response.data);
@@ -30,7 +42,7 @@ const OrderTab: React.FC = () => {
       .catch(error => {
         console.error('Error fetching data:', error);
       });
-  }, []);
+  };
 
   const addNewOrder = () => {
     const newOrder: Order = {
@@ -299,6 +311,6 @@ const OrderTab: React.FC = () => {
 
     
   );
-};
+});
 
 export default OrderTab;
