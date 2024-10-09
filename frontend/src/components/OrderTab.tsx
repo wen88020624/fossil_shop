@@ -92,7 +92,6 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
 
   const showDeleteConfirm = (id: string) => {
     setDeleteId(id);
-    deleteOrder();
     setIsModalVisible(true);
   };
 
@@ -101,11 +100,6 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
       await axios.post('http://localhost:5001/api/delete', { id: deleteId });
       setDataSource(orders.filter(order => order.id !== deleteId));
     }
-    setIsModalVisible(false);
-    
-  };
-
-  const modalCancel = () => {
     setIsModalVisible(false);
   };
 
@@ -303,7 +297,7 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
         onOk={deleteOrder}
         onCancel={() => setIsModalVisible(false)}
         okText="確認"
-        cancelText="取消"
+        cancelText=" 取消"
       >
         <p>確定要刪除這筆訂單嗎？</p>
       </Modal>

@@ -7,7 +7,7 @@ import axios from "axios";
 const { Dragger } = Upload;
 
 interface UploadOrderTabProps {
-  onUploadSuccess: () => void; // New prop for callback function
+  onUploadSuccess: () => void; // 刷新訂單
 }
 
 const UploadOrderTab: React.FC<UploadOrderTabProps> = ({ onUploadSuccess }) => {
@@ -28,7 +28,7 @@ const UploadOrderTab: React.FC<UploadOrderTabProps> = ({ onUploadSuccess }) => {
       },
       header: true,
     });
-    return false; // Prevent automatic upload
+    return false;
   };
 
   const handleUpload = async () => {
@@ -45,7 +45,7 @@ const UploadOrderTab: React.FC<UploadOrderTabProps> = ({ onUploadSuccess }) => {
         },
       });
       message.success("File uploaded successfully.");
-      onUploadSuccess(); // Call the callback function
+      onUploadSuccess(); // 刷新訂單
     } catch (error) {
       message.error("File upload failed.");
     }
