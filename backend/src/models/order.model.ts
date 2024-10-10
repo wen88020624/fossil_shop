@@ -1,5 +1,5 @@
 import { Order } from '../entities/order';
-
+import { AppDataSource } from '../config/data-source';
 async function add(orderData: { id: string, product_type: string, product_name: string, sale_price: number, buyer_name: string, income: number, receiver_name: string, sale_date: Date }) {
     const order = new Order();
     // TODO 待修正
@@ -32,10 +32,19 @@ async function saveAllOrders(orders: Order[]) {
     return Order.save(orders);
 }
 
+async function buyerBarChart() {
+    const result = await AppDataSource.manager.createQueryBuilder(Order, 'order')
+        .select('buyer_name', 'SUM(income)')
+        .groupBy('buyer_name')
+        .getRawMany();
+    return result;
+}
+
 export default {
     add,
     remove,
     update,
     findAll,
-    saveAllOrders
+    saveAllOrders,
+    buyerBarChart
 };

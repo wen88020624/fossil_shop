@@ -3,6 +3,7 @@ import orderController from '../controllers/order.controller';
 import uploadController from '../controllers/upload.controller';
 import { celebrate } from 'celebrate';
 import validate from '../middleware/validations/order.validation';
+import { buyerBarChart } from '../controllers/chart.controller';
 
 const router: Router = express.Router();
 
@@ -20,5 +21,8 @@ router.route('/findAll')
 
 router.route('/uploadOrders')
     .post(uploadController.uploadOrders);
+
+router.route('/buyerBarChart')
+    .post(buyerBarChart);
 
 export default router;
