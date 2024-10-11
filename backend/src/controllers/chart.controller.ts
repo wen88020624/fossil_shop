@@ -6,4 +6,9 @@ export const buyerBarChart = async (req: Request, res: Response) => {
     res.json(data);
 }
 
-export default buyerBarChart;
+export const monthBarChart = async (req: Request, res: Response) => {
+    const data = await chartService.monthBarChart();
+    res.json(data);
+}
+
+export default { buyerBarChart, monthBarChart };

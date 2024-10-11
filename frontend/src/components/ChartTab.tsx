@@ -7,19 +7,18 @@ const ChartTab: React.FC = () => {
   const [selectedText, setSelectedText] = useState<string>("月份");
   const [chartOption, setChartOption] = useState<any>(null);  
 
-  // 假資料
-  const data_month = [
-    { category: '一月', value: 120 },
-    { category: '二月', value: 200 },
-    { category: '三月', value: 150 },
-    { category: '四月', value: 80 },
-    { category: '五月', value: 70 },
-    { category: '六月', value: 110 },
-    { category: '七月', value: 130 },
-  ];
-
   const getBuyerBarChart = async () => {
     const response = await axios.post("http://localhost:5001/api/buyerBarChart");
+    const data = response.data.map((item: { category: string, value: string }) => ({
+        category: item.category,
+        value: Number(item.value)
+    }));
+    console.log(data);
+    return data;
+  };
+
+  const getMonthBarChart = async () => {
+    const response = await axios.post("http://localhost:5001/api/monthBarChart");
     const data = response.data.map((item: { category: string, value: string }) => ({
         category: item.category,
         value: Number(item.value)
@@ -34,8 +33,13 @@ const ChartTab: React.FC = () => {
   };
 
   const handleDrawChart = async () => {
-    const data = await getBuyerBarChart();
-    console.log(data);
+    console.log(category);
+    let data: any;
+    if (category === "month") {
+        data = await getMonthBarChart();
+    } else {
+        data = await getBuyerBarChart();
+    }
     const option = {
         title: {
             text: `按${selectedText}銷售`,

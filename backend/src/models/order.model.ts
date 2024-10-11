@@ -41,11 +41,21 @@ async function buyerBarChart() {
     return result;
 }
 
+async function monthBarChart() {
+    const result = await AppDataSource.manager.createQueryBuilder(Order, 'order')
+        .select("TO_CHAR(order.sale_date, 'YYYY-MM')", "yearMonth")
+        .addSelect("SUM(order.income)", "totalIncome")
+        .groupBy("TO_CHAR(order.sale_date, 'YYYY-MM')")
+        .getRawMany();
+    return result;
+}
+
 export default {
     add,
     remove,
     update,
     findAll,
     saveAllOrders,
-    buyerBarChart
+    buyerBarChart,
+    monthBarChart
 };

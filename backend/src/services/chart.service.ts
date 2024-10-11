@@ -9,6 +9,16 @@ async function buyerBarChart() {
     .sort((a, b) => b.value - a.value);
 }
 
+async function monthBarChart() {
+    const data = await orderModel.monthBarChart();
+    return data.map(item => ({
+        category: item.yearMonth,
+        value: Number(item.totalIncome)
+    }))
+    .sort((a, b) => new Date(a.category).getTime() - new Date(b.category).getTime());
+}
+
 export default {
-    buyerBarChart
+    buyerBarChart,
+    monthBarChart
 };
