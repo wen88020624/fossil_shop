@@ -34,8 +34,9 @@ async function saveAllOrders(orders: Order[]) {
 
 async function buyerBarChart() {
     const result = await AppDataSource.manager.createQueryBuilder(Order, 'order')
-        .select('buyer_name', 'SUM(income)')
-        .groupBy('buyer_name')
+        .select('order.buyer_name', 'buyer')
+        .addSelect('SUM(order.income)', 'total_income')
+        .groupBy('order.buyer_name')
         .getRawMany();
     return result;
 }
