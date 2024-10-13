@@ -22,6 +22,9 @@ router.route('/findAll')
 router.route('/uploadOrders')
     .post(uploadController.uploadOrders);
 
+router.route('/downloadAllOrders')
+    .post(orderController.downloadAllOrders);
+
 router.route('/buyerBarChart')
     .post(buyerBarChart);
 

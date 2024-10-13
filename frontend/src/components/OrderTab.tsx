@@ -1,5 +1,5 @@
-import React, { useEffect, forwardRef, useImperativeHandle, useState } from "react";
-import { Table, Form, Modal, TableColumnsType } from "antd";
+import { useEffect, forwardRef, useImperativeHandle, useState } from "react";
+import { Table, Form, Modal, TableColumnsType, Button } from "antd";
 import axios from "axios";
 import Input from "antd/lib/input";
 
@@ -106,6 +106,22 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
   const editCancel = () => {
     setEditingKey(null);
   };
+
+  const downloadAllOrders = async () => {
+    await axios.post('http://localhost:5001/api/downloadAllOrders', { responseType: 'blob' })
+      .then(response => {
+        const url = window.URL.createObjectURL(new Blob(["\uFEFF"+response.data], { type: 'text/csv;charset=utf-8;' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'orders.csv'); // 設置下載文件的名稱
+        document.body.appendChild(link); // 將鏈接添加到 DOM
+        link.click(); // 模擬點擊事件
+        document.body.removeChild(link); // 點擊後移除鏈接
+      })
+      .catch(error => {
+        console.error('Error downloading CSV:', error);
+      });
+};
 
   const columns: TableColumnsType<Order> = [
     {
@@ -260,13 +276,13 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <button onClick={() => save(record.id)} disabled={!isButtonEnabled}>保存</button>
-            <button onClick={editCancel}>取消</button>
+            <Button onClick={() => save(record.id)} disabled={!isButtonEnabled}>保存</Button>
+            <Button onClick={editCancel}>取消</Button>
           </span>
         ) : (
           <span>
-            <button onClick={() => edit(record)}>編輯</button>
-            <button onClick={() => showDeleteConfirm(record.id)}>刪除</button>
+            <Button onClick={() => edit(record)}>編輯</Button>
+            <Button danger onClick={() => showDeleteConfirm(record.id)}>刪除</Button>
           </span>
         );
       }
@@ -282,7 +298,8 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
 
   return (
     <div>
-      <button onClick={addNewOrder}>新增訂單</button>
+      <Button type="primary" onClick={addNewOrder}>新增訂單</Button>
+      <Button type="primary" onClick={downloadAllOrders}>匯出所有訂單</Button>
       <Form form={form} component={false} onFieldsChange={handleSaveButtonBlocked}>
         <Table 
           columns={columns}
