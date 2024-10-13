@@ -74,7 +74,7 @@ const UploadOrderTab: React.FC<UploadOrderTabProps> = ({ onUploadSuccess }) => {
   return (
     <div>
       <a href="/template.csv" download>
-        <button>下載CSV模板</button>
+        <Button>下載CSV模板</Button>
       </a>
       <Dragger
         name="file"

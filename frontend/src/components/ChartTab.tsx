@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ReactECharts from 'echarts-for-react';
+import { Button, Select } from "antd";
 import axios from 'axios';
 
 const ChartTab: React.FC = () => {
@@ -27,9 +28,9 @@ const ChartTab: React.FC = () => {
     return data;
   };
 
-  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedText(event.target.options[event.target.selectedIndex].text);
-    setCategory(event.target.value);
+  const handleCategoryChange = (value: string, option: any) => {
+    setCategory(value);
+    setSelectedText(option.label);
   };
 
   const handleDrawChart = async () => {
@@ -77,11 +78,16 @@ const ChartTab: React.FC = () => {
       <h1>長條圖</h1>
       <div>
         <label htmlFor="category-select">選擇分類：</label>
-        <select id="category-select" value={category} onChange={handleCategoryChange}>
-          <option value="month">月份</option>
-          <option value="buyer_name">買家</option>
-        </select>
-        <button onClick={handleDrawChart}>繪製圖表</button>
+        <Select 
+            defaultValue="month"
+            id="category-select"
+            onChange={handleCategoryChange}
+            options={[
+                { value: "month", label: "月份" },
+                { value: "buyer_name", label: "買家" },
+            ]}
+        />
+        <Button onClick={handleDrawChart}>繪製圖表</Button>
       </div>
       {chartOption && <ReactECharts option={chartOption} />}
     </div>
