@@ -1,5 +1,5 @@
 import { useEffect, forwardRef, useImperativeHandle, useState } from "react";
-import { Table, Form, Modal, TableColumnsType, Button } from "antd";
+import { Table, Form, Modal, TableColumnsType, Button, Row, Col } from "antd";
 import axios from "axios";
 import Input from "antd/lib/input";
 
@@ -298,8 +298,14 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
 
   return (
     <div>
-      <Button type="primary" onClick={addNewOrder}>新增訂單</Button>
-      <Button type="primary" onClick={downloadAllOrders}>匯出所有訂單</Button>
+      <Row justify="space-between">
+        <Col>
+          <Button type="primary" onClick={addNewOrder}>新增訂單</Button>
+        </Col>
+        <Col>
+          <Button type="primary" onClick={downloadAllOrders}>匯出所有訂單</Button>
+        </Col>
+      </Row>
       <Form form={form} component={false} onFieldsChange={handleSaveButtonBlocked}>
         <Table 
           columns={columns}
