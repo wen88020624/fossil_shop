@@ -3,7 +3,7 @@ import orderController from '../controllers/order.controller';
 import uploadController from '../controllers/upload.controller';
 import { celebrate } from 'celebrate';
 import validate from '../middleware/validations/order.validation';
-import { buyerBarChart, monthBarChart } from '../controllers/chart.controller';
+import chartController from '../controllers/chart.controller';
 
 const router: Router = express.Router();
 
@@ -26,9 +26,9 @@ router.route('/downloadAllOrders')
     .post(orderController.downloadAllOrders);
 
 router.route('/buyerBarChart')
-    .post(buyerBarChart);
+    .post(chartController.buyerBarChart);
 
 router.route('/monthBarChart')
-    .post(monthBarChart);
+    .post(chartController.monthBarChart);
 
 export default router;
