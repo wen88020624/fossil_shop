@@ -2,6 +2,7 @@ import orderService from '../src/services/order.service';
 import orderModel from '../src/models/order.model';
 import uploadService from '../src/services/upload.service';
 import { Order } from '../src/entities/order';
+
 jest.mock('../src/models/order.model', () => ({
     add: jest.fn(),
     remove: jest.fn(),
@@ -25,8 +26,8 @@ describe('Order Service', () => {
 
     const mockOrderData2 = {
         id: 'bf3a18b3-b703-4498-a451-cec5dc23b530',
-        product_type: 'Bm',
-        product_name: '化石',
+        product_type: 'Mn',
+        product_name: '礦石',
         sale_price: 2000,
         buyer_name: 'Bob',
         income: 2120,
