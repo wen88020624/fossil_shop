@@ -35,7 +35,7 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
   }));
 
   const getOrders = () => {
-    axios.post('http://localhost:5001/api/findAll')
+    axios.post('http://localhost:5001/api/orders/findAll')
       .then(response => {
         setDataSource(response.data);
       })
@@ -79,15 +79,21 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
         setEditingKey(null);
         if (id === "0") {
           
-          await axios.post('http://localhost:5001/api/add', updatedItem);
+          await axios.post('http://localhost:5001/api/orders/add', updatedItem);
         } else {
           
-          await axios.post('http://localhost:5001/api/update', updatedItem);
+          await axios.post('http://localhost:5001/api/orders/update', updatedItem);
         }
       }
     } catch (errInfo) {
       console.log('Validate Failed:', errInfo);
     }
+  };
+
+  const handleCancel = () => {
+    setEditingKey(null);
+    form.resetFields();
+    setDataSource(orders.filter(order => order.id !== null));
   };
 
   const showDeleteConfirm = (id: string) => {
@@ -97,18 +103,14 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
 
   const deleteOrder = async() => {
     if (deleteId) {
-      await axios.post('http://localhost:5001/api/delete', { id: deleteId });
+      await axios.post('http://localhost:5001/api/orders/delete', { id: deleteId });
       setDataSource(orders.filter(order => order.id !== deleteId));
     }
     setIsModalVisible(false);
   };
 
-  const editCancel = () => {
-    setEditingKey(null);
-  };
-
   const downloadAllOrders = async () => {
-    await axios.post('http://localhost:5001/api/downloadAllOrders', { responseType: 'blob' })
+    await axios.post('http://localhost:5001/api/orders/downloadAllOrders', { responseType: 'blob' })
       .then(response => {
         const url = window.URL.createObjectURL(new Blob(["\uFEFF"+response.data], { type: 'text/csv;charset=utf-8;' }));
         const link = document.createElement('a');
@@ -277,7 +279,7 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
         return editable ? (
           <span>
             <Button onClick={() => save(record.id)} disabled={!isButtonEnabled}>保存</Button>
-            <Button onClick={editCancel}>取消</Button>
+            <Button onClick={handleCancel}>取消</Button>
           </span>
         ) : (
           <span>

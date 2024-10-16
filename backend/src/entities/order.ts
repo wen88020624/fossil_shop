@@ -5,8 +5,8 @@ export class Order extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'varchar', length: 10 })
-  product_type!: string;
+  @Column({ type: 'int', nullable: false })
+  product_type_id!: number;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   product_name!: string;

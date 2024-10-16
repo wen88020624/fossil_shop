@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import { Order } from "../entities/order";
+import { ProductType } from "../entities/product_type";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -8,7 +9,7 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "admin",
   database: "postgres",
-  entities: [Order],
+  entities: [Order, ProductType],
   synchronize: false,   // 開啟時會自動同步資料庫，要設定成 false，千萬不可定為 true，否則可能一不小心就會把本地暫時修改的 table schema 同步到遠端的資料庫上造成資料遺失
   logging: false,     // debug SQL 語句時才打開，否則耗費資源
 });

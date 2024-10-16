@@ -1,6 +1,7 @@
+import { Order } from "src/entities/order";
 import orderModel from "../models/order.model";
 
-async function add(orderData: { id: string, product_type: string, product_name: string, sale_price: number, buyer_name: string, income: number, receiver_name: string, sale_date: Date }) {
+async function add(orderData: Order) {
     return orderModel.add(orderData);
 }
 

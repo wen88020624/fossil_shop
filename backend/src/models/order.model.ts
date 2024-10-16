@@ -1,6 +1,6 @@
 import { Order } from '../entities/order';
 import { AppDataSource } from '../config/data-source';
-async function add(orderData: { id: string, product_type: string, product_name: string, sale_price: number, buyer_name: string, income: number, receiver_name: string, sale_date: Date }) {
+async function add(orderData: Order) {
     const order = new Order();
     // TODO 待修正
     const { id, ...orderDataWithoutId } = orderData;
@@ -28,7 +28,6 @@ async function findAll() {
 }
 
 async function saveAllOrders(orders: Order[]) {
-    console.log(orders);
     return Order.save(orders);
 }
 
