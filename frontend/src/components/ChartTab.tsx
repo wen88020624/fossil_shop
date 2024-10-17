@@ -9,7 +9,7 @@ const ChartTab: React.FC = () => {
   const [chartOption, setChartOption] = useState<any>(null);  
 
   const getBuyerBarChart = async () => {
-    const response = await axios.post("http://localhost:5001/api/buyerBarChart");
+    const response = await axios.post("http://localhost:5001/api/orders/buyerBarChart");
     const data = response.data.map((item: { category: string, value: string }) => ({
         category: item.category,
         value: Number(item.value)
@@ -19,7 +19,7 @@ const ChartTab: React.FC = () => {
   };
 
   const getMonthBarChart = async () => {
-    const response = await axios.post("http://localhost:5001/api/monthBarChart");
+    const response = await axios.post("http://localhost:5001/api/orders/monthBarChart");
     const data = response.data.map((item: { category: string, value: string }) => ({
         category: item.category,
         value: Number(item.value)
