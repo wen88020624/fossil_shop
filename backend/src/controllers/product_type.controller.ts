@@ -12,7 +12,7 @@ export async function add(req: Request, res: Response) {
 }
 
 export async function remove(req: Request, res: Response) {
-    const { id } = req.params;
+    const { id } = req.body;
     try {
         await productTypeService.removeProductType(Number(id));
         res.status(204).send();
@@ -22,10 +22,9 @@ export async function remove(req: Request, res: Response) {
 }
 
 export async function update(req: Request, res: Response) {
-    const { id } = req.params;
     const productType = req.body;
     try {
-        const updatedProductType = await productTypeService.update(Number(id), productType);
+        const updatedProductType = await productTypeService.update(productType);
         res.status(200).json(updatedProductType);
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
@@ -42,7 +41,7 @@ export async function findAll(req: Request, res: Response) {
 }
 
 export default {
-    add,
+    add: add,
     remove,
     update,
     findAll

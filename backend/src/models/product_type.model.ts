@@ -8,8 +8,13 @@ export async function remove(id: number) {
     return ProductType.delete(id);
 }
 
-export async function update(id: number, productType: Partial<ProductType>) {
-    return ProductType.update(id, productType);
+export async function update(productTypeData: ProductType) {
+    const productType = await ProductType.findOneBy({ id: productTypeData.id });
+    if (!productType) {
+        throw new Error('ProductType not found');
+    }
+    Object.assign(productType, productTypeData);
+    return productType.save();
 }
 
 export async function findAll() {

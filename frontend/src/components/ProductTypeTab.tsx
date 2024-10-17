@@ -14,9 +14,8 @@ interface UploadOrderTabProps {
 
 const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
-  const [editingProductType, setEditingProductType] = useState<ProductType | null>(null);
+  const [editingKey, setEditingKey] = useState<number | null>(null);
   const [form] = Form.useForm();
-  const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
@@ -40,29 +39,34 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
       name: '',
     };
     setProductTypes([newProductType, ...productTypes]);
-    setEditingProductType(newProductType);
+    setEditingKey(null);
     form.setFieldsValue(newProductType);
   };
 
-  const handleSaveButtonBlocked = () => {
-    const currentValues = form.getFieldsValue();
-    const allFieldsFilled = Object.values(currentValues).every(value => value !== '');
-    setIsButtonEnabled(allFieldsFilled);
-  };
-
-  const isEditing = (record: ProductType) => record.id === editingProductType?.id;
+  const isEditing = (record: ProductType) => record.id === editingKey;
 
   const handleEdit = (productType: ProductType) => {
-    setEditingProductType(productType);
+    setEditingKey(productType.id);
+    form.setFieldsValue(productType);
   };
 
-  const handleSave = async (id: number) => {
+  const handleSave = async () => {
     const productType = await form.validateFields();
-    if (editingProductType) {
+    if (editingKey === null) { // 新增操作
       try {
-        await axios.post('http://localhost:5001/api/product-types/update', productType);
-        setEditingProductType(null);
+        await axios.post('http://localhost:5001/api/product-types/add', productType);
         fetchProductTypes();
+        onUpdateSuccess();
+        message.success('Product type added successfully');
+      } catch (error) {
+        message.error('Failed to add product type');
+      }
+    } else {
+      try {
+        await axios.post('http://localhost:5001/api/product-types/update', { id: editingKey, ...productType });
+        setEditingKey(null);
+        fetchProductTypes();
+        onUpdateSuccess();
         message.success('Product type updated successfully');
       } catch (error) {
         message.error('Failed to update product type');
@@ -71,7 +75,7 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
   };
 
   const handleCancel = () => {
-    setEditingProductType(null);
+    setEditingKey(null);
     form.resetFields();
     setProductTypes(productTypes.filter(productType => productType.id !== null));
   };
@@ -81,10 +85,11 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
     setIsModalVisible(true);
   };
 
-  const deleteProductType = async() => {
+  const deleteProductType = async () => {
     if (deleteId) {
-      await axios.post('http://localhost:5001/api/product-types/delete', { id: deleteId });
+      await axios.post('http://localhost:5001/api/product-types/remove', { id: deleteId });
       setProductTypes(productTypes.filter(productType => productType.id !== deleteId));
+      onUpdateSuccess();
     }
     setIsModalVisible(false);
   };
@@ -99,6 +104,7 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
           <Form.Item
             name="code"
             style={{ margin: 0 }}
+            rules={[{ required: true, message: '請輸入代號' }]} // 添加驗證規則
           >
             <Input />
           </Form.Item>
@@ -116,6 +122,7 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
           <Form.Item
             name="name"
             style={{ margin: 0 }}
+            rules={[{ required: true, message: '請輸入名稱' }]} // 添加驗證規則
           >
             <Input />
           </Form.Item>
@@ -130,7 +137,7 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Button onClick={() => handleSave(record.id !== null ? record.id : 0)} disabled={!isButtonEnabled}>保存</Button>
+            <Button onClick={handleSave}>保存</Button>
             <Button onClick={handleCancel}>取消</Button>
           </span>
         ) : (
@@ -146,7 +153,7 @@ const ProductTypeTab: React.FC<UploadOrderTabProps> = ({ onUpdateSuccess }) => {
   return (
     <div>
       <Button type="primary" onClick={addNewProductType}>新增產品類型</Button>
-      <Form form={form} component={false} onFieldsChange={handleSaveButtonBlocked}>
+      <Form form={form} component={false}>
         <Table
           columns={columns}
           dataSource={productTypes}

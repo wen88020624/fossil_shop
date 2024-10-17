@@ -7,14 +7,16 @@ import ProductTypeTab from "./components/ProductTypeTab";
 
 interface OrderTabRef {
   refreshTable: () => void;
+  refreshProductTypes: () => void;
 }
 
 function App() {
   const orderTabRef = useRef<OrderTabRef>(null);
 
-  const refreshOrderTable = () => {
+  const refreshOrderTableAndProductTypes = () => {
     if (orderTabRef.current) {
       orderTabRef.current.refreshTable();
+      orderTabRef.current.refreshProductTypes();
     }
   };
 
@@ -26,7 +28,7 @@ function App() {
         </Tabs.TabPane>
         
         <Tabs.TabPane tab="產品類型" key="2">
-          <ProductTypeTab onUpdateSuccess={refreshOrderTable} />
+          <ProductTypeTab onUpdateSuccess={refreshOrderTableAndProductTypes} />
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="統計" key="3">
@@ -34,7 +36,7 @@ function App() {
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="CSV上傳訂單" key="4">
-          <UploadOrderTab onUploadSuccess={refreshOrderTable} />
+          <UploadOrderTab onUploadSuccess={refreshOrderTableAndProductTypes} />
         </Tabs.TabPane>
       </Tabs>
     </div>

@@ -1,17 +1,23 @@
 import { useEffect, forwardRef, useImperativeHandle, useState } from "react";
-import { Table, Form, Modal, TableColumnsType, Button, Row, Col } from "antd";
+import { Table, Form, Modal, TableColumnsType, Button, Row, Col, message, Select } from "antd";
 import axios from "axios";
 import Input from "antd/lib/input";
 
 type Order = {
-  id: string;
-  product_type: string;
+  id: string | null;
+  product_type_id: number;
   product_name: string;
   sale_price: number;
   buyer_name: string;
   income: number;
   receiver_name: string;
   sale_date: Date;
+};
+
+type ProductType = {
+  id: string;
+  code: string;
+  name: string;
 };
 
 interface OrderTabRef {
@@ -25,13 +31,15 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
   const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
 
   // 取得訂單
   useEffect(() => { getOrders() }, []);
-
+  useEffect(() => { getProductTypes() }, []);
   // 刷新訂單
   useImperativeHandle(ref, () => ({
-    refreshTable: getOrders
+    refreshTable: getOrders,
+    refreshProductTypes: getProductTypes
   }));
 
   const getOrders = () => {
@@ -44,10 +52,20 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
       });
   };
 
+  const getProductTypes = () => {
+    axios.post('http://localhost:5001/api/product-types/findAll')
+      .then(response => {
+        setProductTypes(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  };
+
   const addNewOrder = () => {
     const newOrder: Order = {
-      id: "0",
-      product_type: "Am",
+      id: null,
+      product_type_id: 1,
       product_name: "菊石",
       sale_price: 0,
       buyer_name: "",
@@ -66,23 +84,25 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
     setIsButtonEnabled(allFieldsFilled);
   };
 
-  const save = async (id: string) => {
+  const save = async () => {
     try {
-      const row = await form.validateFields();
-      const newData = [...orders];
-      const index = newData.findIndex((item) => id === item.id);
-      if (index > -1) {
-        const item = newData[index];
-        const updatedItem = { ...item, ...row };
-        newData.splice(index, 1, updatedItem);
-        setDataSource(newData);
-        setEditingKey(null);
-        if (id === "0") {
-          
-          await axios.post('http://localhost:5001/api/orders/add', updatedItem);
-        } else {
-          
-          await axios.post('http://localhost:5001/api/orders/update', updatedItem);
+      const order = await form.validateFields();
+      if (editingKey === null) {
+        try {
+          await axios.post('http://localhost:5001/api/orders/add', order);
+          getOrders();
+          message.success('Order added successfully');
+        } catch (error) {
+          message.error('Failed to add order');
+        }
+      } else {
+        try {
+          await axios.post('http://localhost:5001/api/orders/update', { id: editingKey, ...order });
+          setEditingKey(null);
+          getOrders();
+          message.success('Order updated successfully');
+        } catch (error) {
+          message.error('Failed to update order');
         }
       }
     } catch (errInfo) {
@@ -96,15 +116,15 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
     setDataSource(orders.filter(order => order.id !== null));
   };
 
-  const showDeleteConfirm = (id: string) => {
+  const showDeleteConfirm = (id: string | null) => {
     setDeleteId(id);
     setIsModalVisible(true);
   };
 
-  const deleteOrder = async() => {
-    if (deleteId) {
-      await axios.post('http://localhost:5001/api/orders/delete', { id: deleteId });
-      setDataSource(orders.filter(order => order.id !== deleteId));
+  const deleteOrder = async(id: string | null) => {
+    if (id) {
+      await axios.post('http://localhost:5001/api/orders/delete', { id: id });
+      setDataSource(orders.filter(order => order.id !== id));
     }
     setIsModalVisible(false);
   };
@@ -130,19 +150,26 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
       title: '類型',
       dataIndex: 'product_type',
       key: 'product_type',
-      sorter: (a: Order, b: Order) => a.product_type.localeCompare(b.product_type),
-      filters: Array.from(new Set(orders.map(item => item.product_type))).map(type => ({
-        text: type,
-        value: type,
+      sorter: (a: Order, b: Order) => a.product_type_id - b.product_type_id,
+      filters: productTypes.map(type => ({
+        text: type.name,
+        value: type.id.toString(),
       })),
-      onFilter: (value: string, record: Order) => record.product_type.includes(value as string),
+      onFilter: (value: string, record: Order) => record.product_type_id.toString() === value,
       render: (text: string, record: Order) => {
         return isEditing(record) ? (
           <Form.Item
-            name="product_type"
+            name="product_type_id"
             style={{ margin: 0 }}
+            rules={[{ required: true, message: '請選擇產品類型' }]}
           >
-            <Input />
+            <Select>
+              {productTypes.map(type => (
+                <Select.Option key={type.id} value={type.id}>
+                  {type.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         ) : (
           text
@@ -278,7 +305,7 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Button onClick={() => save(record.id)} disabled={!isButtonEnabled}>保存</Button>
+            <Button onClick={() => save()} disabled={!isButtonEnabled}>保存</Button>
             <Button onClick={handleCancel}>取消</Button>
           </span>
         ) : (
@@ -319,7 +346,7 @@ const OrderTab = forwardRef<OrderTabRef>((props, ref) => {
       <Modal
         title="刪除訂單"
         open={isModalVisible}
-        onOk={deleteOrder}
+        onOk={() => deleteOrder(deleteId)}
         onCancel={() => setIsModalVisible(false)}
         okText="確認"
         cancelText=" 取消"
