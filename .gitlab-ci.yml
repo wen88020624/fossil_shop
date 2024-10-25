@@ -1,0 +1,79 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  NODE_VERSION: "16.14.0"
+
+# 後端作業
+backend-build:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - cd backend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - backend/dist/
+
+backend-test:
+  stage: test
+  image: node:${NODE_VERSION}
+  script:
+    - cd backend
+    - npm ci
+    - npm test
+
+backend-deploy:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  script:
+    - cd backend
+    - npm ci
+    - npm run build
+    # 這裡添加您的後端部署腳本
+  only:
+    - main
+
+# 前端作業
+frontend-build:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/build/
+
+frontend-test:
+  stage: test
+  image: node:${NODE_VERSION}
+  script:
+    - cd frontend
+    - npm ci
+    - npm test
+
+frontend-deploy:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+    # 這裡添加您的前端部署腳本
+  only:
+    - main
+
+# 整合部署（如果需要）
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying both backend and frontend"
+    # 這裡添加整合部署的腳本
+  only:
+    - main
+
