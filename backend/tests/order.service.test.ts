@@ -1,93 +1,109 @@
-// import orderService from '../src/services/order.service';
-// import orderModel from '../src/models/order.model';
-// import uploadService from '../src/services/upload.service';
-// import { Order } from '../src/entities/order';
+import orderService from '../src/services/order.service';
+import orderModel from '../src/models/order.model';
+import productTypeModel from '../src/models/product_type.model';
+import { Order } from '../src/entities/order';
 
-// jest.mock('../src/models/order.model', () => ({
-//     add: jest.fn(),
-//     remove: jest.fn(),
-//     update: jest.fn(),
-//     findAll: jest.fn(),
-//     saveAllOrders: jest.fn(),
-// }));
+jest.mock('../src/models/order.model');
+jest.mock('../src/models/product_type.model');
 
-// describe('Order Service', () => {
+describe('Order Service', () => {
+    const mockOrder = {
+        id: 'af3a18b3-b703-4498-a451-cec5dc23b529',
+        product_type_id: 1,
+        product_name: '多維爾菊石',
+        sale_price: 1000,
+        buyer_name: 'Alice',
+        income: 1060,
+        receiver_name: '史庭鈞',
+        sale_date: new Date('2023-09-13')
+    } as Order;
 
-//     const mockOrderData1 = {
-//         id: 'af3a18b3-b703-4498-a451-cec5dc23b529',
-//         product_type: 'Am',
-//         product_name: '多維爾菊石',
-//         sale_price: 1000,
-//         buyer_name: 'Alice',
-//         income: 1060,
-//         receiver_name: '史庭鈞',
-//         sale_date: new Date('2023-09-13')
-//     };
+    const mockProductType = {
+        id: 1,
+        name: 'Am',
+        code: 'AM001'
+    };
 
-//     const mockOrderData2 = {
-//         id: 'bf3a18b3-b703-4498-a451-cec5dc23b530',
-//         product_type: 'Mn',
-//         product_name: '礦石',
-//         sale_price: 2000,
-//         buyer_name: 'Bob',
-//         income: 2120,
-//         receiver_name: '王小明',
-//         sale_date: new Date('2023-09-14')
-//     };
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//     });
+    describe('add', () => {
+        it('should add an order', async () => {
+            (orderModel.add as jest.Mock).mockResolvedValue(mockOrder);
 
-//     test('should add an order', async () => {
-//          (orderModel.add as jest.Mock).mockResolvedValue(mockOrderData1);
+            const result = await orderService.add(mockOrder);
 
-//          const result = await orderService.add(mockOrderData1);
+            expect(orderModel.add).toHaveBeenCalledWith(mockOrder);
+            expect(result).toEqual(mockOrder);
+        });
+    });
 
-//          expect(orderModel.add).toHaveBeenCalledWith(mockOrderData1);
-//          expect(result).toEqual(mockOrderData1);
-//     });
+    describe('deleteOrder', () => {
+        it('should delete an order', async () => {
+            (orderModel.remove as jest.Mock).mockResolvedValue(mockOrder);
 
-//     test('should remove an order', async () => {
-//         (orderModel.remove as jest.Mock).mockResolvedValue(mockOrderData1);
+            const result = await orderService.deleteOrder({ id: mockOrder.id });
 
-//         const result = await orderService.deleteOrder({ id: mockOrderData1.id });
+            expect(orderModel.remove).toHaveBeenCalledWith(mockOrder.id);
+            expect(result).toEqual(mockOrder);
+        });
+    });
 
-//         expect(orderModel.remove).toHaveBeenCalledWith(mockOrderData1.id);
-//         expect(result).toEqual(mockOrderData1);
-//     });
+    describe('update', () => {
+        it('should update an order', async () => {
+            (orderModel.update as jest.Mock).mockResolvedValue(mockOrder);
 
-//     test('should update an order', async () => {
-//         (orderModel.update as jest.Mock).mockResolvedValue(mockOrderData1);
+            const result = await orderService.update(mockOrder);
 
-//         const result = await orderService.update({ ...mockOrderData1 });
+            expect(orderModel.update).toHaveBeenCalledWith(mockOrder.id, mockOrder);
+            expect(result).toEqual(mockOrder);
+        });
+    });
 
-//         expect(orderModel.update).toHaveBeenCalledWith(mockOrderData1.id, mockOrderData1);
-//         expect(result).toEqual(mockOrderData1);
-//     });
+    describe('findAll', () => {
+        it('should return all orders with product type names', async () => {
+            const mockOrders = [mockOrder];
+            const mockProductTypes = [mockProductType];
 
-//     test('should find all orders', async () => {
-//         (orderModel.findAll as jest.Mock).mockResolvedValue([mockOrderData1]);
+            (orderModel.findAll as jest.Mock).mockResolvedValue(mockOrders);
+            (productTypeModel.findAll as jest.Mock).mockResolvedValue(mockProductTypes);
 
-//         const expectedData = [{
-//             ...mockOrderData1,
-//             sale_price: Math.round(mockOrderData1.sale_price),
-//             income: Math.round(mockOrderData1.income),
-//             sale_date: mockOrderData1.sale_date.toISOString().split('T')[0]
-//         }];
+            const expectedResult = [{
+                ...mockOrder,
+                sale_price: Math.round(mockOrder.sale_price),
+                income: Math.round(mockOrder.income),
+                sale_date: mockOrder.sale_date.toISOString().split('T')[0],
+                product_type: mockProductType.name
+            }];
 
-//         const result = await orderService.findAll();
+            const result = await orderService.findAll();
 
-//         expect(orderModel.findAll).toHaveBeenCalled();
-//         expect(result).toEqual(expectedData);
-//     });
-    
-//     test('should save all orders', async () => {
-//         (orderModel.saveAllOrders as jest.Mock).mockResolvedValue([mockOrderData1, mockOrderData2]);
+            expect(orderModel.findAll).toHaveBeenCalled();
+            expect(productTypeModel.findAll).toHaveBeenCalled();
+            expect(result).toEqual(expectedResult);
+        });
 
-//         const result = await uploadService.saveAllOrders([mockOrderData1, mockOrderData2] as Order[]);
+        it('should handle orders with unknown product types', async () => {
+            const orderWithUnknownProductType = {
+                ...mockOrder,
+                product_type_id: 999 // 不存在的產品類型ID
+            } as Order;
 
-//         expect(orderModel.saveAllOrders).toHaveBeenCalledWith([mockOrderData1, mockOrderData2]);
-//         expect(result).toEqual([mockOrderData1, mockOrderData2]);
-//     });
-// });
+            (orderModel.findAll as jest.Mock).mockResolvedValue([orderWithUnknownProductType]);
+            (productTypeModel.findAll as jest.Mock).mockResolvedValue([mockProductType]);
+
+            const expectedResult = [{
+                ...orderWithUnknownProductType,
+                sale_price: Math.round(orderWithUnknownProductType.sale_price),
+                income: Math.round(orderWithUnknownProductType.income),
+                sale_date: orderWithUnknownProductType.sale_date.toISOString().split('T')[0],
+                product_type: undefined
+            }];
+
+            const result = await orderService.findAll();
+
+            expect(result).toEqual(expectedResult);
+        });
+    });
+});
